@@ -1,0 +1,49 @@
+Bootstrap: docker
+From: ubuntu:18.04
+Stage: build
+
+%setup
+    
+%files
+
+%environment
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib
+    export PATH=$PATH:/root/.local/bin
+    export LC_ALL=C.UTF-8
+
+%post
+    apt-get update && apt-get install -y cmake libeigen3-dev git
+
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.local/lib
+    export CPATH=$CPATH:/root/.local/include
+    
+    git clone https://github.com/BioPP/bpp-core
+    git clone https://github.com/BioPP/bpp-seq
+    git clone https://github.com/BioPP/bpp-popgen
+    git clone https://github.com/BioPP/bpp-phyl
+    git clone https://github.com/BioPP/bppsuite
+    git clone https://github.com/BioPP/testnh
+
+    for dir in bpp-core bpp-seq bpp-phyl bpp-popgen bppsuite testnh
+    do
+      echo "Build $dir"
+      cd $dir
+      mkdir build
+      cd build
+      cmake -B . -S .. -DCMAKE_INSTALL_PREFIX=/root/.local # prepare compilation
+      make # compile
+      make install # move files to the installation directory
+      cd ../..
+    done
+
+
+%test
+    echo $PATH
+    which bppml
+
+%labels
+    Author Laurent Guéguen
+    Version v3.0.0
+
+%help
+    Container to build all bpp librairies & softwares
